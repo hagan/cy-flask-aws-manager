@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="starter-template">
+  <h1>AWS Manager</h1>
+  <hr><br>
+  <div>
+    <h3>URL</h3>
+     <div class="container pt-3">
+      <h3>React app root hook</h3>
+      <div id="root"></div>
+    </div>
+  </div>
+  <br><br>
+
+  <!-- <button id="myButton">Click Me!</button> -->
+
+  <button id="appstreamStartButton">Start Instance</button>
+</div>
+{% endblock content %}
+
+{% block js %}
+<script type="text/javascript">
+    window.AWSAppStreamLambdaAPI = "{{ APPSTREAM_LAMBDA_ROOT_URL }}{{ APPSTREAM_API }}";
+    window.bearerToken = "{{ BEARER_TOKEN }}";
+</script>
+{% endblock %}
