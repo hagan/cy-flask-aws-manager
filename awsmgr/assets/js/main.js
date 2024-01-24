@@ -1,5 +1,5 @@
 /*
- * Main Javascript file for appstreamer.
+ * Main Javascript file for awsmgr.
  *
  * This file bundles all of your javascript together using webpack.
  */

@@ -1,0 +1,1 @@
+Nothing in this static folder is saved to our whl!

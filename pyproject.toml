@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "appstreamer"
+name = "awsmgr"
 version = "0.1.1"
 description = ""
 authors = ["Hagan Franks <224019+hagan@users.noreply.github.com>"]
 readme = "README.md"
 
 include = [
-    "appstreamer/app/static/*.js",
-    "appstreamer/app/static/build/*",
+    "awsmgr/app/static/*.js",
+    "awsmgr/app/static/build/*",
     "assets/img/favicon.ico",
 ]
 

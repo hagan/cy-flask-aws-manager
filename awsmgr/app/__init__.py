@@ -5,7 +5,7 @@ from flask import Flask
 from flask_static_digest import FlaskStaticDigest
 from flask_cors import CORS
 
-from flask.awsmgr.config import Config
+from awsmgr.config import Config
 
 
 pp = pprint.PrettyPrinter(indent=4)

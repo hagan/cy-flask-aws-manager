@@ -23,3 +23,10 @@ $ NODE_ENV=development webpack --progress --color && npm run flask-static-digest
 $ poetry build
 
 Should output a file: ./dist/awsmgr-?.?.?-py3-none-any.whl
+
+
+## $ poetry run flask digest compile
+
+Need to remove files in ./dist/*.whl, ./dist/*.gz, ./awsmgr/app/static/build, ./awsmgr/app/static/cache_manifest.json
+
+NODE_ENV=production webpack --progress --color --optimization-minimize && npm run flask-static-digest

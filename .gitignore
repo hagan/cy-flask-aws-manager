@@ -255,3 +255,7 @@ lerna-debug.log
 # System Files
 .DS_Store
 Thumbs.db
+
+awsmgr/app/static/*
+!awsmgr/app/static/.gitkeep
+!awsmgr/app/static/README.md
