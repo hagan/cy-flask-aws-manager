@@ -46,9 +46,9 @@ module.exports = {
     new webpack.ProvidePlugin({ $: "jquery", jQuery: "jquery" }),
     new HookShellScriptPlugin({
       // run a single command
-      afterEmit: [
-          '. $(poetry env info -p)/bin/activate && echo ">>>>RUNNING FLASK DIGEST COMPRESS COMMAND<<<<<"; FLASK_APP="awsmgr.app" flask digest compile; sleep 1; touch awsmgr/__init__.py',
-      ],
+      // afterEmit: [
+      //     '. $(poetry env info -p)/bin/activate && echo ">>>>RUNNING FLASK DIGEST COMPRESS COMMAND<<<<<"; FLASK_APP="awsmgr.app" flask digest compile; sleep 1; touch awsmgr/__init__.py',
+      // ],
       // run multiple commands in parallel
       // done: [
       //   // either as a string

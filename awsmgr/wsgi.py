@@ -10,7 +10,7 @@ import logging
 # from awsmgr import app as app_module
 from awsmgr.app import create_app
 # generic config
-from flask.awsmgr.config import Config as ConfigClass
+from awsmgr.config import Config as ConfigClass
 # from flask_app.app import create_app, db
 
 
