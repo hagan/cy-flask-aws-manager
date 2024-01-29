@@ -25,6 +25,14 @@ $ poetry build
 Should output a file: ./dist/awsmgr-?.?.?-py3-none-any.whl
 
 
+## Pulumi setup
+
+##### Setup environment vars
+    * PULUMI_ACCESS_TOKEN = ????
+    * PULUMI_BACKEND_URL = file:///usr/local/var/pulumi
+    * PULUMI_HOME = /home/cyverse/.pulumi for user cyverse
+
+
 ## $ poetry run flask digest compile
 
 Need to remove files in ./dist/*.whl, ./dist/*.gz, ./awsmgr/app/static/build, ./awsmgr/app/static/cache_manifest.json

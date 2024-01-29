@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+PULUMI_CONFIG_DIR='/usr/local/var/pulumi'
+
+which pulumi >/dev/null || { echo "ERROR: missing pulumi binary!"; exit 1; }
+
+# check if configuration directory exists
+if [ ! -d ${PULUMI_CONFIG_DIR} ]; then
+    mkdir -p ${PULUMI_CONFIG_DIR}
+fi
+
+
+pulumi config --dir ${PULUMI_CONFIG_DIR} 2>/dev/null || {
+    echo "Starting new configuration";
+    pulumi new --dir "${PULUMI_CONFIG_DIR}"
+}
+
+# eventually we need to make cyverse-ec2-example-vpc changable?
+# pulumi config set vpc_name cyverse-ec2-example-vpc
