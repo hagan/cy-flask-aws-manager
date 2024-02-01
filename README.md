@@ -3,6 +3,9 @@ React/Flask code for the frontend/backend sections of our aws manager vice app.
 
 ### SETUP INSTRUCTIONS
 
+Pulumi is a requirement
+$ apt install
+
 Setup project/clone
 $ cd ~/projects/<main project dir>
 $ git clone git@github.com:hagan/cy-flask-aws-manager.git

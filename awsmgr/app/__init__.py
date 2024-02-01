@@ -1,4 +1,5 @@
 import pprint
+import sys
 
 from flask import Flask
 
@@ -6,6 +7,7 @@ from flask_static_digest import FlaskStaticDigest
 from flask_cors import CORS
 
 from awsmgr.config import Config
+from awsmgr.app.utils import is_command_available
 
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -56,6 +58,12 @@ def create_app(config_class=Config):
 
     from awsmgr.app.blueprints.pulumi import commands as pulumi_cli
     configure_cli(app, pulumi_cli)
+
+    # Sanity checks
+    if not (is_command_available('pulumi')):
+        print("ERROR:\tThe binary 'pulumi' does not exist on this system!")
+        print("\tPlease install pulumi on your system.")
+        sys.exit(1)
 
     @app.route('/test/')
     def test_page():

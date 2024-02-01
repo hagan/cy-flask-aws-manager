@@ -12,7 +12,7 @@ import sys
 # zone_number = config.require_int("zone_number")
 # vpc_cidr = config.require("vpc_cidr")
 
-def pulumi_program():
+def create_s3_bucket():
     # Importing inside the function to avoid loading issues when the automation API rehydrates the program
     import pulumi_aws as aws
 
@@ -23,12 +23,15 @@ def pulumi_program():
     pulumi.export('bucket_name', bucket.id)
 
 
-def init(app=None):
+def init(pulumi_program, app=None):
     """
     This calls AWS services with pulumi
     """
     destroy = True
     if app is None:
+        return
+
+    if pulumi_program is None:
         return
 
     project_name = app.config['PULUMI_PROJECT_NAME']
@@ -38,6 +41,7 @@ def init(app=None):
     pulumi_home = app.config['PULUMI_HOME']
 
     aws_region = app.config['AWS_REGION']
+
     aws_kms_env = app.config['AWS_KMS_KEY']
     
 

@@ -1,4 +1,5 @@
 import click
+import sys
 
 from flask import current_app
 from flask.cli import with_appcontext
@@ -6,39 +7,38 @@ from flask.cli import with_appcontext
 from . import services as pulumi_services
 
 
-@click.command('pulumi-setup')
+@click.command('awscmd')
+@click.argument('command')
+@click.option('--aws-kms-key', default=None, help="AWS_KMS_KEY override")
 @with_appcontext
-def pulumi_setup():
-    click.echo('Configuring pulumi')
-    pulumi_services.init(app=current_app)
-
-
-@click.command('vpc-setup')
-@with_appcontext
-def vpc_setup():
+def awscmd(command, aws_kms_key):
     """
-    @TODO: This needs to stand up a VPC for our EC2's to exist in so we can 
-    use one elastic IP to connect into the system from the outside.
-
-    Will also want to attaching billing tags / project tags
+    Our flask cli handler for testing our pulumni commands
     """
-    click.echo('Setting up VPC')
-    # pulumi_services.pulumi_services()
+    print(f"command: {command}")
+    print(f"aws_kms_key: {aws_kms_key}")
+    valid_cmds = {
+        'create-s3', 'destroy-s3', 'create-vpc', 'destroy-vpc'
+    }
+    if command in valid_cmds:
+        # Test we have AWS_KMS_KEY
+        if (not aws_kms_key) and ()'AWS_KMS_KEY' not in current_app.config or not (current_app.config['AWS_KMS_KEY'])):
+            click.echo("Must provide AWS_KMS_KEY via an Environment variable or by passing in command line!")
+            sys.exit(1)
+        else:
+            if aws_kms_key:
+                click.echo(f"AWS_KMS_KEY: {aws_kms_key}")
+            else:
+                click.echo(f"AWS_KMS_KEY: {current_app.config['AWS_KMS_KEY']}")
 
 
-@click.command('vpc-teardown')
-@with_appcontext
-def vpc_teardown():
-    """
-    @TODO: This needs to teardown a VPC for our EC2's. This should check
-    if there are any existing systems using service and stop or ask to confirm.
+        click.echo(f'awscmd - {command}')
+        if command == 'create-s3':
+            pulumi_services.init(pulumi_services.create_s3_bucket, app=current_app)
+    else:
+        click.echo(f"Error: '{command}' is not a command!")
 
-    Will also want to attaching billing tags / project tags
-    """
-    click.echo('Tearing down VPC')
 
 __commands__ = [
-    pulumi_setup,
-    vpc_setup,
-    vpc_teardown,
+    awscmd,
 ]
