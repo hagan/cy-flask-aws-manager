@@ -22,7 +22,7 @@ def awscmd(command, aws_kms_key):
     }
     if command in valid_cmds:
         # Test we have AWS_KMS_KEY
-        if (not aws_kms_key) and ()'AWS_KMS_KEY' not in current_app.config or not (current_app.config['AWS_KMS_KEY'])):
+        if (not aws_kms_key) and (('AWS_KMS_KEY' not in current_app.config) or not (current_app.config['AWS_KMS_KEY'])):
             click.echo("Must provide AWS_KMS_KEY via an Environment variable or by passing in command line!")
             sys.exit(1)
         else:
