@@ -16,5 +16,8 @@ if command -v poetry >/dev/null 2>&1; then
     && poetry build \
     && ls -lhtp ./dist/*.whl | head -n1 | awk '{print $9, $5}' \
     && echo "Done."
-  #&&  
+  #&&
+else
+  >&2 echo "ERROR: poetry is missing!"
+  exit 1
 fi

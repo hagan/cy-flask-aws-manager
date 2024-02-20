@@ -1,0 +1,27 @@
+
+### SETUP INSTRUCTIONS
+
+
+
+## To build project
+$ cd ~/projects/<main project dir>/cy-flask-aws-manager
+$ nvm use stable & npm install
+$ NODE_ENV=development webpack --progress --color && npm run flask-static-digest
+$ poetry build
+
+Should output a file: ./dist/awsmgr-?.?.?-py3-none-any.whl
+
+
+## Pulumi setup
+
+##### Setup environment vars
+    * PULUMI_ACCESS_TOKEN = ????
+    * PULUMI_BACKEND_URL = file:///usr/local/var/pulumi
+    * PULUMI_HOME = /home/cyverse/.pulumi for user cyverse
+
+
+## $ poetry run flask digest compile
+
+Need to remove files in ./dist/*.whl, ./dist/*.gz, ./awsmgr/app/static/build, ./awsmgr/app/static/cache_manifest.json
+
+NODE_ENV=production webpack --progress --color --optimization-minimize && npm run flask-static-digest
