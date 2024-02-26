@@ -258,3 +258,5 @@ Thumbs.db
 
 # Don't track our pyenv setup
 .python-version
+
+trashbin/

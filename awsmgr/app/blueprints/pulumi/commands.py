@@ -1,22 +1,27 @@
 import click
 import sys
+import asyncio
 
 from flask import current_app
 from flask.cli import with_appcontext
 
 from . import services as pulumi_services
+from .services import create_pulumi_project_dir, pulumi_main_stack
 
-
-@click.command('awscmd')
+@click.command(name='awscmd')
 @click.argument('command')
 @click.option('--aws-kms-key', default=None, help="AWS_KMS_KEY override")
 @with_appcontext
 def awscmd(command, aws_kms_key):
     """
-    Our flask cli handler for testing our pulumni commands
+    Plumui aws script calls
+    awscmd <command>
+    e.g., "create-s3", "destroy-s3", "create-vpc", "destroy-vpc"
     """
-    print(f"command: {command}")
-    print(f"aws_kms_key: {aws_kms_key}")
+
+    create_pulumi_project_dir(printf=click.echo)
+
+    click.echo(f'Command: {command}')
     valid_cmds = {
         'create-s3', 'destroy-s3', 'create-vpc', 'destroy-vpc'
     }
@@ -31,12 +36,14 @@ def awscmd(command, aws_kms_key):
             else:
                 click.echo(f"AWS_KMS_KEY: {current_app.config['AWS_KMS_KEY']}")
 
-
-        click.echo(f'awscmd - {command}')
         if command == 'create-s3':
-            pulumi_services.init(pulumi_services.create_s3_bucket, app=current_app)
-    else:
-        click.echo(f"Error: '{command}' is not a command!")
+            pulumi_main_stack(printf=click.echo)
+            # asyncio.run(pulumi_main_stack(printf=click.echo))
+            # pulumi_services.init(pulumi_services.create_s3_bucket, app=current_app)
+    #     elif command == 'destroy-s3':
+    #         pulumi_services.init(pulumi_services.destroy_s3_bucket, app=current_app)
+    # else:
+    #     click.echo(f"Error: '{command}' is not a command!")
 
 
 __commands__ = [
