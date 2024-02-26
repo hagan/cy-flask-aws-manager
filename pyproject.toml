@@ -11,6 +11,9 @@ include = [
     "assets/img/favicon.ico",
 ]
 
+[tool.poetry.scripts]
+awsmgr = "awsmgr.cli:awsmgr"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 flask = "^3.0.0"

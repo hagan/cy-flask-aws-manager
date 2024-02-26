@@ -8,7 +8,7 @@ import pulumi_aws as aws
 
 import sys
 
-from awsmgr.app.utils import with_appcontext
+# from awsmgr.app.utils import with_appcontext
 
 # config = pulumi.Config()
 # env = pulumi.get_stack()
@@ -17,11 +17,8 @@ from awsmgr.app.utils import with_appcontext
 # vpc_cidr = config.require("vpc_cidr")
 
 
-@with_appcontext
-def pulumi_s3_bucket(app):
-    """
-
-    """
+# @with_appcontext app
+def pulumi_s3_bucket():
      # Create an AWS S3 bucket
     bucket = aws.s3.Bucket('myBucket')
 

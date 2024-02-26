@@ -25,3 +25,37 @@ Should output a file: ./dist/awsmgr-?.?.?-py3-none-any.whl
 Need to remove files in ./dist/*.whl, ./dist/*.gz, ./awsmgr/app/static/build, ./awsmgr/app/static/cache_manifest.json
 
 NODE_ENV=production webpack --progress --color --optimization-minimize && npm run flask-static-digest
+
+    #
+
+    # if command in valid_cmds:
+    #     # Test we have AWS_KMS_KEY
+
+    #     # else:
+    #     #     if aws_kms_key:
+    #     #         click.echo(f"AWS_KMS_KEY: {aws_kms_key}")
+    #     #     else:
+    #     #         click.echo(f"AWS_KMS_KEY: {current_app.config['AWS_KMS_KEY']}")
+
+    #     if command == 'create-s3':
+    #         pulumi_main_stack(printf=click.echo, destroy=False)
+    #     elif command == 'destroy-s3':
+    #         pulumi_main_stack(printf=click.echo, destroy=True)
+    #         # asyncio.run(pulumi_main_stack(printf=click.echo))
+    # #         # pulumi_services.init(pulumi_services.create_s3_bucket, app=current_app)
+    # # #     elif command == 'destroy-s3':
+    # # #         pulumi_services.init(pulumi_services.destroy_s3_bucket, app=current_app)
+    # # # else:
+    # # #     click.echo(f"Error: '{command}' is not a command!")
+
+# @click.command(name='awscmd')
+# @click.argument('command')
+# @click.option('--aws-kms-key', default=None, help="AWS_KMS_KEY override")
+# def awscmd(command, aws_kms_key):
+#     """
+#     Plumui aws script calls
+#     awscmd <command>
+#     e.g., "create-s3", "destroy-s3", "create-vpc", "destroy-vpc"
+#     """
+
+#     base_awscmd(command, aws_kms_key)

@@ -44,8 +44,8 @@ def create_app(config_class=Config):
     cors.init_app(app, resources={r"/Staging/awsmgr/*": {"origins": "*"}})
 
     # Register blueprints commands here
-    from . import commands
-    configure_cli(app, commands)
+    # from . import commands
+    # configure_cli(app, commands)
 
     from awsmgr.app.blueprints.ec2 import commands as ec2_cli
     configure_cli(app, ec2_cli)
