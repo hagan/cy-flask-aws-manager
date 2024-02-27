@@ -1,6 +1,7 @@
 import os
 import asyncio
 from pathlib import Path
+from typing import Callable
 
 from flask import current_app
 from flask.cli import with_appcontext
@@ -14,6 +15,9 @@ from pulumi.automation import LocalWorkspace, Stack, ProjectSettings, ProjectBac
 # from awsmgr.app import create_app
 
 from .s3bucket import pulumi_s3_bucket
+from .ec2instance import pulumi_ec2_instance
+
+SetupStackFunction = Callable[[], None]
 
 
 # app = create_app()
@@ -37,12 +41,15 @@ def create_dir(
             # printf(f"Error creating directory '{dir_path}': {e}")
             return
 
-async def setup_stack(
-    project_name,
-    stack_name,
-    pulumi_project_dir,
-    pulumi_home_dir,
-    aws_region
+def setup_stack(
+    program: SetupStackFunction,
+    project_name: str,
+    stack_name: str,
+    pulumi_project_dir: str,
+    pulumi_home_dir: str,
+    aws_region: str,
+    setup: bool = True,
+    printf=print
 ):
     backend = ProjectBackend(pulumi_project_dir)
     project_settings = ProjectSettings(
@@ -50,27 +57,31 @@ async def setup_stack(
         backend=backend
     )
     workspace = LocalWorkspace(
-        program=pulumi_s3_bucket,
+        program=program,
         project_settings=project_settings,
         pulumi_home=pulumi_home_dir,
     )
     stacks = workspace.list_stacks()
     stack_names = [stack.name for stack in stacks]
     if stack_name in stack_names:
-        print("BEFORE ISSUE A")
+        printf("BEFORE ISSUE A")
         stack = Stack.select(stack_name=stack_name, workspace=workspace)
     else:
-        print("BEFORE ISSUE B")
+        printf("BEFORE ISSUE B")
         stack = Stack.create(stack_name=stack_name, workspace=workspace)
 
-    print("and here C")
+    printf("and here C")
     stack.workspace.install_plugin("aws", "v4.0.0")
     # stack.set_config("aws:region", value="us-west-2", secret=False)
-    print("and here D")
+    printf("and here D")
     stack.set_config("aws:region", ConfigValue(value=aws_region, secret=False))
-    print("and here E")
-    up_result = await stack.up()
-    print(f"Up result: \n{up_result.summary.resource_changes}")
+    printf("and here E")
+    if setup:
+        up_result = stack.up(on_output=printf)
+        printf(f"Up result: \n{up_result.summary.resource_changes}")
+    else:
+        destroy_result = stack.destroy(on_output=printf)
+        printf(f"Destroy result: \n{destroy_result.summary.resource_changes}")
 
 
 # @with_appcontext
@@ -90,10 +101,26 @@ def pulumi_main_stack(
     # pulumi_project_dir = f"file://{current_app.config['PULUMI_PROJECT_DIR']}"
     # pulumi_home_dir = f"{current_app.config['PULUMI_HOME']}"
     # aws_region = f"{current_app.config['AWS_REGION']}"
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(setup_stack(project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region))
-    loop.close()
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
+    # loop.run_until_complete(setup_stack(project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region))
+    # loop.close()
+
+    if command == 'create-s3':
+        printf("Creating s3 stack...")
+        setup_stack(pulumi_s3_bucket, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, printf=printf)
+    elif command == 'destroy-s3':
+        printf("Destroying s3 stack...")
+        setup_stack(pulumi_s3_bucket, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, setup=False, printf=printf)
+    elif command == 'create-ec2':
+        printf("Creating ec2 instance...")
+        setup_stack(pulumi_ec2_instance, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, printf=printf)
+    elif command == 'destroy-ec2':
+        printf("Destroying ec2 instance...")
+        setup_stack(pulumi_ec2_instance, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, setup=False, printf=printf)
+    else:
+        printf("Unregcognized command: '{command}'")
+
 
     # if command == 'create-s3':
     #     up_result = stack.up()

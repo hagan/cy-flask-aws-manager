@@ -13,8 +13,11 @@ class Config:
     PULUMI_PROJECT_DIR = os.environ.get('PULUMI_PROJECT_DIR', '/usr/local/var/pulumi')
     PULUMI_PROJECT_TEMPLATE = os.environ.get('PULUMI_PROJECT_TEMPLATE', '')
     # AWS settings
-    AWS_REGION = os.environ.get('AWS_REGION', 'us-west-2')
+    AWS_REGION = os.environ.get('AWS_DEFAULT_REGION', 'us-west-2')
+    AWS_PROFILE = os.environ.get('AWS_DEFAUL_PROFILE', '')
     AWS_KMS_KEY = os.environ.get('AWS_KMS_KEY', '')
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
 
     # Lambda stuff
     # BEARER_TOKEN = os.environ.get('BEARER_TOKEN', None)
@@ -28,4 +31,5 @@ class Config:
     # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')\
     #     or 'sqlite:///' + os.path.join(basedir, 'app.db')
     # SQLALCHEMY_TRACK_MODIFICATIONS = False
+    BOTO3_SERVICES = ['s3', 'ec2']
 

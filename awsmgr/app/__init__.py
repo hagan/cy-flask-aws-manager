@@ -9,6 +9,7 @@ from flask_cors import CORS
 from awsmgr.config import Config
 from awsmgr.app.utils import is_command_available
 
+from awsmgr.flask_boto3 import Boto3
 
 pp = pprint.PrettyPrinter(indent=4)
 flask_static_digest = FlaskStaticDigest()
@@ -26,13 +27,14 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     # Initialize Flask extensions here
+    boto_flask = Boto3(app)
 
-     # Register blueprints here
+    # Register blueprints here
     from awsmgr.app.blueprints.main import bp as main_bp
     app.register_blueprint(main_bp)
 
-    from awsmgr.app.blueprints.ec2 import bp as ec2_bp
-    app.register_blueprint(ec2_bp)
+    from awsmgr.app.blueprints.boto import bp as boto_bp
+    app.register_blueprint(boto_bp)
 
     from awsmgr.app.blueprints.lambdas import bp as lambdas_bp
     app.register_blueprint(lambdas_bp)
@@ -47,8 +49,8 @@ def create_app(config_class=Config):
     # from . import commands
     # configure_cli(app, commands)
 
-    from awsmgr.app.blueprints.ec2 import commands as ec2_cli
-    configure_cli(app, ec2_cli)
+    from awsmgr.app.blueprints.boto import commands as boto_cli
+    configure_cli(app, boto_cli)
 
     from awsmgr.app.blueprints.lambdas import commands as lambdas_cli
     configure_cli(app, lambdas_cli)
