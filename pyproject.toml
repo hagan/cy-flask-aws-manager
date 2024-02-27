@@ -12,7 +12,7 @@ include = [
 ]
 
 [tool.poetry.scripts]
-awsmgr = "awsmgr.cli:awsmgr"
+awsmgr = "awsmgr.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"

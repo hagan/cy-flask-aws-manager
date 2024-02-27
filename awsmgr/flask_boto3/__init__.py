@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import UnknownServiceError
 
 from flask import current_app, g
-
+import click
 
 class Boto3:
     """Stores a bunch of boto3 conectors inside Flask's application context
@@ -14,7 +14,6 @@ class Boto3:
     All connectors are stored inside the dict `boto3_cns` where the keys are
     the name of the services and the values their associated boto3 client.
     """
-
     def __init__(self, app=None):
         self.app = app
         if self.app is not None:
@@ -24,11 +23,14 @@ class Boto3:
         """
         Register our teardown?
         """
-        print("Initialized Boto3 Flask extension!")
-        @app.teardown_request
-        def teardown_request(exception=None):
-            print("Calling teardown for Boto3 extension")
-            self.teardown(exception)
+        @app.teardown_appcontext
+        def teardown(exception=None):
+            """This is called when app context is closed"""
+            if hasattr(g, 'boto3_cns'):
+                for c in g.boto3_cns:
+                    con = g.boto3_cns[c]
+                    if hasattr(con, 'close') and callable(con.close):
+                        con.close()
 
     def connect(self):
         """Iterate through the application configuration and instantiate
@@ -77,13 +79,6 @@ class Boto3:
         except UnknownServiceError:
             raise
         return cns
-
-    def teardown(self, exception):
-        if hasattr(g, 'boto3_cns'):
-            for c in g.boto3_cns:
-                con = g.boto3_cns[c]
-                if hasattr(con, 'close') and callable(con.close):
-                    con.close()
 
     @property
     def resources(self):

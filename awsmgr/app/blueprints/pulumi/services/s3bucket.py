@@ -18,10 +18,8 @@ import sys
 
 
 # @with_appcontext app
-def pulumi_s3_bucket():
-     # Create an AWS S3 bucket
-    bucket = aws.s3.Bucket('myBucket')
-
-    # Export the bucket's name
-    pulumi.export('bucket_name', bucket.id)
-
+def pulumi_s3_bucket_func(bucket_name: str):
+    if bucket_name:
+        bucket = aws.s3.Bucket(bucket_name)
+        # Export the bucket's name
+        pulumi.export('bucket_name', bucket.id)

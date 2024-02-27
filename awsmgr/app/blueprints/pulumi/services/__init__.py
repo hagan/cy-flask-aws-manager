@@ -14,16 +14,13 @@ from pulumi.automation import LocalWorkspace, Stack, ProjectSettings, ProjectBac
 # from awsmgr.app.utils import with_appcontext
 # from awsmgr.app import create_app
 
-from .s3bucket import pulumi_s3_bucket
-from .ec2instance import pulumi_ec2_instance
+# from .s3bucket import pulumi_s3_bucket
+# from .ec2instance import pulumi_ec2_instance
+
 
 SetupStackFunction = Callable[[], None]
 
 
-# app = create_app()
-
-
-# @with_appcontext
 def create_dir(
     dir_path=None,
     printf=print
@@ -41,7 +38,7 @@ def create_dir(
             # printf(f"Error creating directory '{dir_path}': {e}")
             return
 
-def setup_stack(
+def pulumi_setup_stack_call(
     program: SetupStackFunction,
     project_name: str,
     stack_name: str,
@@ -85,41 +82,41 @@ def setup_stack(
 
 
 # @with_appcontext
-def pulumi_main_stack(
-    command,
-    aws_kms_key=None,
-    project_name=None,
-    stack_name=None,
-    pulumi_project_dir=None,
-    pulumi_home_dir=None,
-    aws_region=None,
-    printf=print
-):
-    ## @TODO: this is where we track state!
-    # project_name = "pulumi_over_automation"
-    # stack_name = "dev"
-    # pulumi_project_dir = f"file://{current_app.config['PULUMI_PROJECT_DIR']}"
-    # pulumi_home_dir = f"{current_app.config['PULUMI_HOME']}"
-    # aws_region = f"{current_app.config['AWS_REGION']}"
-    # loop = asyncio.new_event_loop()
-    # asyncio.set_event_loop(loop)
-    # loop.run_until_complete(setup_stack(project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region))
-    # loop.close()
+# def pulumi_main_stack(
+#     command,
+#     aws_kms_key=None,
+#     project_name=None,
+#     stack_name=None,
+#     pulumi_project_dir=None,
+#     pulumi_home_dir=None,
+#     aws_region=None,
+#     printf=print
+# ):
+#     ## @TODO: this is where we track state!
+#     # project_name = "pulumi_over_automation"
+#     # stack_name = "dev"
+#     # pulumi_project_dir = f"file://{current_app.config['PULUMI_PROJECT_DIR']}"
+#     # pulumi_home_dir = f"{current_app.config['PULUMI_HOME']}"
+#     # aws_region = f"{current_app.config['AWS_REGION']}"
+#     # loop = asyncio.new_event_loop()
+#     # asyncio.set_event_loop(loop)
+#     # loop.run_until_complete(pulumi_setup_stack_call(project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region))
+#     # loop.close()
 
-    if command == 'create-s3':
-        printf("Creating s3 stack...")
-        setup_stack(pulumi_s3_bucket, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, printf=printf)
-    elif command == 'destroy-s3':
-        printf("Destroying s3 stack...")
-        setup_stack(pulumi_s3_bucket, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, setup=False, printf=printf)
-    elif command == 'create-ec2':
-        printf("Creating ec2 instance...")
-        setup_stack(pulumi_ec2_instance, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, printf=printf)
-    elif command == 'destroy-ec2':
-        printf("Destroying ec2 instance...")
-        setup_stack(pulumi_ec2_instance, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, setup=False, printf=printf)
-    else:
-        printf("Unregcognized command: '{command}'")
+#     if command == 'create-s3':
+#         printf("Creating s3 stack...")
+#         pulumi_setup_stack_call(pulumi_s3_bucket, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, printf=printf)
+#     elif command == 'destroy-s3':
+#         printf("Destroying s3 stack...")
+#         pulumi_setup_stack_call(pulumi_s3_bucket, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, setup=False, printf=printf)
+#     elif command == 'create-ec2':
+#         printf("Creating ec2 instance...")
+#         pulumi_setup_stack_call(pulumi_ec2_instance, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, printf=printf)
+#     elif command == 'destroy-ec2':
+#         printf("Destroying ec2 instance...")
+#         pulumi_setup_stack_call(pulumi_ec2_instance, project_name, stack_name, pulumi_project_dir, pulumi_home_dir, aws_region, setup=False, printf=printf)
+#     else:
+#         printf("Unregcognized command: '{command}'")
 
 
     # if command == 'create-s3':
@@ -132,5 +129,5 @@ def pulumi_main_stack(
 
 __all__ = [
     create_dir,
-    pulumi_main_stack,
+    pulumi_setup_stack_call,
 ]
