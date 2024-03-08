@@ -14,7 +14,7 @@ from awsmgr.app.blueprints.pulumi.services.s3bucket import pulumi_s3_bucket_func
 from awsmgr.app.blueprints.pulumi.services.ec2instance import pulumi_ec2_instance_func
 # from awsmgr.app.blueprints.pulumi.commands import base_awscmd
 
-from awsmgr.app.blueprints.boto.services import boto3_start_ec2, boto3_stop_ec2
+from awsmgr.app.blueprints.boto.services import boto3_start_ec2, boto3_stop_ec2, boto3_renew_token
 
 # from awsmgr.config import Config
 
@@ -210,6 +210,27 @@ def stop_ec2(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region, 
         aws_region = app.config['AWS_REGION']
         boto3_stop_ec2(ec2_resource_name, printf=click.echo)
 
+
+
+
+@main.command()
+@click.option('--aws-kms-key', default=None, help="AWS_KMS_KEY environment variable override")
+@click.option('--aws-access-key-id', default=None, help="AWS_ACCESS_KEY_ID environment variable override")
+@click.option('--aws-secret-access-key', default=None, help="AWS_SECRET_ACCESS_KEY environment variable override")
+@click.option('--aws-region', default=None, help="AWS_DEFAULT_REGION environment variable override")
+@click.option('--aws-profile', default=None, help="AWS_DEFAULT_PROFILE environment variable override")
+@click.option('--tag-name', default=DEFAULT_TAG_NAME, help="DEFAULT_TAG_NAME environment variable override")
+@click.option('--ec2-resource-name', default=DEFAULT_RESOURCE_NAME, help=f"EC2 resource name, ie {DEFAULT_RESOURCE_NAME}")
+def renew_token(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region, aws_profile, tag_name, ec2_resource_name):
+    f"""
+    Renew the temporary token
+    """
+    click.echo(f"\t[1] Renewing temporary token")
+    click.echo("\t[2] Initialize Flask application stack")
+    app = create_app()
+    with app.app_context():
+            aws_region = app.config['AWS_REGION']
+            boto3_renew_token('128254351856', 'test', printf=click.echo)
 
 if __name__ == "__main__":
     main()

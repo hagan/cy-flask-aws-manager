@@ -9,7 +9,8 @@ from flask_cors import CORS
 from awsmgr.config import Config
 from awsmgr.app.utils import is_command_available
 
-from awsmgr.flask_boto3 import Boto3
+
+from pymemcache.client.base import Client
 
 pp = pprint.PrettyPrinter(indent=4)
 flask_static_digest = FlaskStaticDigest()
@@ -27,7 +28,8 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     # Initialize Flask extensions here
-    boto_flask = Boto3(app)
+
+    app.memcached_client = Client(('localhost', 11212))
 
     # Register blueprints here
     from awsmgr.app.blueprints.main import bp as main_bp
