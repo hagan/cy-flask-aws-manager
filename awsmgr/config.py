@@ -13,11 +13,21 @@ class Config:
     PULUMI_PROJECT_DIR = os.environ.get('PULUMI_PROJECT_DIR', '/usr/local/var/pulumi')
     PULUMI_PROJECT_TEMPLATE = os.environ.get('PULUMI_PROJECT_TEMPLATE', '')
     # AWS settings
-    AWS_REGION = os.environ.get('AWS_DEFAULT_REGION', 'us-west-2')
-    AWS_PROFILE = os.environ.get('AWS_DEFAUL_PROFILE', '')
-    AWS_KMS_KEY = os.environ.get('AWS_KMS_KEY', '')
-    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
-    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+
+    ## @TODO: future maybe we pull data from this?
+    # AWS_CONFIG_FILE = os.environ.get('AWS_CONFIG_FILE', None)
+    ## Or use a profile?
+    # AWS_PROFILE = os.environ.get('AWS_PROFILE', None)
+
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
+    AWS_SESSION_TOKEN = os.environ.get('AWS_SESSION_TOKEN', None)
+    AWS_KMS_KEY = os.environ.get('AWS_KMS_KEY', None)
+    # Not a valid aws environment var!
+    AWS_SESSION_TOKEN_DURATION = os.environ.get('AWS_SESSION_TOKEN_DURATION', None)
+    MEMCACHED_PORT = os.environ.get('MEMCACHED_PORT', 11212)
+
+    AWS_DEFAULT_REGION = os.environ.get('AWS_DEFAULT_REGION', 'us-west-2')
 
     # Lambda stuff
     # BEARER_TOKEN = os.environ.get('BEARER_TOKEN', None)
