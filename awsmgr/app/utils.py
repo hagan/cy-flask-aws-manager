@@ -26,6 +26,9 @@ def with_appcontext(f):
 
 
 def session_cred_dict(printf=print, **awsconfig):
+    """
+    Subset of credentials used to initialize an aws session
+    """
     auth_keys = [
         'aws_access_key_id',
         'aws_secret_access_key',

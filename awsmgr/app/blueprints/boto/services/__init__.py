@@ -3,6 +3,7 @@ import pprint
 import sys
 import re
 
+from botocore.credentials import RefreshableCredentials
 from botocore.exceptions import NoCredentialsError, ClientError
 from boto3.session import Session
 
@@ -61,6 +62,52 @@ def boto3_stop_ec2(ec2_resource_name, printf=print):
         printf(f"ERROR: Could not find {ec2_resource_name}")
 
 
+def refresh_credentials(printf=print):
+    """
+    Assumes role and get temporary credentials
+    """
+    sts_client = boto3.client('sts')
+
+    # get account_id and role_session_name!
+    raise Exception("INCOMPLETE")
+    account_id = ''
+    role_name = 'AWSManagerRole'
+    role_session_name = 'AwsManagerRoleSession'
+
+    assumed_role = sts_client.assume_role(
+        RoleArn=f"arn:aws:iam::{account_id}:role/{role_name}",
+        RoleSessionName=role_session_name,
+    )
+    credentials = assumed_role['Credentials']
+    printf("New credentials? vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv")
+    printf(pprint.pformat(assumed_role))
+    printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+    return {
+        'access_key': credentials['AccessKeyId'],
+        'secret_key': credentials['SecretAccessKey'],
+        'token': credentials['SessionToken'],
+        'expiry_time': credentials['Expiration'].isoformat(),
+    }
+
+
+def boto3_get_session(printf=print, awsconfig: dict = {}):
+    printf("boto3_get_session()")
+    if(awsconfig):
+        session = boto3.Session(**session_cred_dict(**awsconfig))
+    else:
+        raise BotoException("ERROR: Requires a Session object or awsconfig dictionary!", status=1, code='PEBCAK')
+
+    # hook in our refresh thing?
+    refreshable_credentials = RefreshableCredentials.create_from_metadata(
+        metadata=refresh_credentials(),
+        refresh_using=refresh_credentials,
+        method='sts-assume-role'
+    )
+    session._credentials = refreshable_credentials
+    autorefresh_session = Session(botocore_session=session)
+    return autorefresh_session
+
+
 def boto3_get_caller_id(printf=print, session: Session=None, awsconfig: dict ={}):
     """
     Get our user's id (used for testing credentials work)
@@ -82,10 +129,8 @@ def boto3_get_caller_id(printf=print, session: Session=None, awsconfig: dict ={}
         }
     }
     """
-    if((session is None) and awsconfig):
-        session = boto3.Session(**session_cred_dict(**awsconfig))
-    elif(session is None and not awsconfig):
-        raise BotoException("ERROR: Requires a Session object or awsconfig dictionary!", status=1, code='PEBCAK')
+    if session is None:
+        session = boto3_get_session(printf=printf, awsconfig=awsconfig)
 
     printf("Testing with session?")
     sts_client = session.client('sts')
@@ -108,6 +153,7 @@ def boto3_get_caller_id(printf=print, session: Session=None, awsconfig: dict ={}
             if match:
                 role_id = match.group(1)
         printf(f"account_id: {account_id} user_id: {user_id} role_id: {role_id}")
+
         return account_id, user_id, role_id
 
 

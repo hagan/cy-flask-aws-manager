@@ -8,7 +8,6 @@ import click
 import boto3
 
 # from flask import Flask
-from botocore.credentials import RefreshableCredentials
 
 from awsmgr.app import create_app
 from awsmgr.app.blueprints.pulumi.services import pulumi_setup_stack_call
@@ -17,7 +16,7 @@ from awsmgr.app.blueprints.pulumi.services.ec2instance import pulumi_ec2_instanc
 # from awsmgr.app.blueprints.pulumi.commands import base_awscmd
 
 from awsmgr.app.utils import get_aws_config, session_cred_dict, AWSConfigException
-from awsmgr.app.blueprints.boto.services import boto3_start_ec2, boto3_stop_ec2, boto3_renew_token, boto3_get_caller_id, BotoException
+from awsmgr.app.blueprints.boto.services import boto3_get_session, boto3_start_ec2, boto3_stop_ec2, boto3_renew_token, boto3_get_caller_id, BotoException
 
 # from awsmgr.config import Config
 
@@ -254,40 +253,45 @@ def renew_token(env: dict, fakeit: bool, skip_memcached: bool, aws_session_token
         )
 
         # click.echo(pprint.pformat(session_cred_dict(**awsconfig)))
-        credentials = session_cred_dict(printf=click.echo, **awsconfig)
-        session = boto3.Session(**credentials)
-        click.echo(f"\t[2b] Got credentials")
-        if not fakeit:
-            click.echo(f"\t[3] Renewing temporary token")
-            try:
-                res = boto3_renew_token(
-                    printf=click.echo,
-                    session=session  # keys are provided in uppercase!
-                )
-            except BotoException as e:
-                if e.status == 2:
-                    click.echo("Token expired", err=True)
-                else:
-                    click.echo(e.message, err=True)
-                sys.exit(1)
-            else:
-                sys.exit(0)
-        else:
-            click.echo(f"\t[3] Testing credentials")
-            try:
-                caller_id = boto3_get_caller_id(
-                    printf=click.echo,
-                    session=session
-                )
-            except BotoException as e:
-                if e.status == 2:
-                    click.echo("Token expired", err=True)
-                else:
-                    click.echo(e.message, err=True)
-                sys.exit(1)
-            else:
-                click.echo(f"Caller credentials {caller_id}")
-                sys.exit(0)
+        #
+        # session = boto3.Session(**credentials)
+        session = boto3_get_session(
+            printf=click.echo,
+            awsconfig=session_cred_dict(printf=click.echo, **awsconfig)
+        )
+
+        # click.echo(f"\t[2b] Got credentials")
+        # if not fakeit:
+        #     click.echo(f"\t[3] Renewing temporary token")
+        #     try:
+        #         res = boto3_renew_token(
+        #             printf=click.echo,
+        #             session=session  # keys are provided in uppercase!
+        #         )
+        #     except BotoException as e:
+        #         if e.status == 2:
+        #             click.echo("Token expired", err=True)
+        #         else:
+        #             click.echo(e.message, err=True)
+        #         sys.exit(1)
+        #     else:
+        #         sys.exit(0)
+        # else:
+        #     click.echo(f"\t[3] Testing credentials")
+        #     try:
+        #         caller_id = boto3_get_caller_id(
+        #             printf=click.echo,
+        #             session=session
+        #         )
+        #     except BotoException as e:
+        #         if e.status == 2:
+        #             click.echo("Token expired", err=True)
+        #         else:
+        #             click.echo(e.message, err=True)
+        #         sys.exit(1)
+        #     else:
+        #         click.echo(f"Caller credentials {caller_id}")
+        #         sys.exit(0)
 
 if __name__ == "__main__":
     main()
