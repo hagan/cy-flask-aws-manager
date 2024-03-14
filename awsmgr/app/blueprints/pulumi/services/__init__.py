@@ -6,6 +6,7 @@ from typing import Callable
 from flask import current_app
 from flask.cli import with_appcontext
 
+from pulumi_aws import Provider
 from pulumi.automation import LocalWorkspace, Stack, ProjectSettings, ProjectBackend, ConfigValue
 
 ## with_appcontext sets functions 'app' argument to current_app from flask
@@ -37,6 +38,21 @@ def create_dir(
         except Exception as e:
             # printf(f"Error creating directory '{dir_path}': {e}")
             return
+
+
+def get_pulumi_provider(awsconfig: dict = {}):
+    """
+    Setup AWS Provider
+    """
+    print("get_pulumi_provider()")
+    Provider(
+        "aws-provider",
+        access_key=awsconfig[],
+        secret_key=awsconfig[],
+        region=awsconfig[]
+    )
+
+
 
 def pulumi_setup_stack_call(
     program: SetupStackFunction,

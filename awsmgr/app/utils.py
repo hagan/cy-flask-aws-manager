@@ -30,9 +30,11 @@ def session_cred_dict(printf=print, **awsconfig):
     Subset of credentials used to initialize an aws session
     """
     auth_keys = [
+        'aws_account_id',
         'aws_access_key_id',
         'aws_secret_access_key',
-        'aws_session_token'
+        'aws_session_token',
+        'aws_credential_expiration'
     ]
     ret_dict = {key: awsconfig[key] for key in auth_keys if key in awsconfig }
     return ret_dict
@@ -65,18 +67,22 @@ def get_aws_config(skip_memcached=False, printf=print, env={}, **kwargs):
     """
     #@TODO: move defaults to our flask config?
     awsdefaults = {
+        'AWS_ACCOUNT_ID': None,
         'AWS_ACCESS_KEY_ID': None,
         'AWS_SECRET_ACCESS_KEY': None,
         'AWS_SESSION_TOKEN': None,
+        'AWS_CREDENTIAL_EXPIRATION': None,
         'AWS_SESSION_TOKEN_DURATION': 900,
         'AWS_KMS_KEY': None,
         'AWS_DEFAULT_REGION': None,
         'AWS_PROFILE': None,
     }
     allowed_awsconfig = [
+        'AWS_ACCOUNT_ID',
         'AWS_ACCESS_KEY_ID',
         'AWS_SECRET_ACCESS_KEY',
         'AWS_SESSION_TOKEN',
+        'AWS_CREDENTIAL_EXPIRATION',
         'AWS_SESSION_TOKEN_DURATION',
         'AWS_KMS_KEY',
         'AWS_DEFAULT_REGION',
@@ -85,9 +91,9 @@ def get_aws_config(skip_memcached=False, printf=print, env={}, **kwargs):
     awsconfig = {}
     missed1 = []
 
-    # printf("***************************")
-    # printf(pprint.pformat(kwargs))
-    # printf("***************************")
+    printf("***************************")
+    printf(pprint.pformat(kwargs))
+    printf("***************************")
 
     # Store keys if passed kwargs have values set
     for i, (key, value) in enumerate(kwargs.items()):  # input keys are lowercase
@@ -124,8 +130,9 @@ def get_aws_config(skip_memcached=False, printf=print, env={}, **kwargs):
             if key in memcached_keys:
                 value = memcached_keys[key]
                 if (value is not None):
-                    printf(f"2nd: {i} memcached {key} => {rewrite_sensitive_key(key, value)}")
-                    awsconfig[key] = value.decode('utf-8')
+                    decoded_value = value.decode('utf-8') if type(value) is bytes else value
+                    printf(f"2nd: {i} memcached {key} => {rewrite_sensitive_key(key, decoded_value)}")
+                    awsconfig[key] = decoded_value
                 else:
                     missed2.append(key)
             else:

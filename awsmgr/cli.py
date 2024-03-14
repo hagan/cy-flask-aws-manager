@@ -15,14 +15,16 @@ from awsmgr.app.blueprints.pulumi.services.s3bucket import pulumi_s3_bucket_func
 from awsmgr.app.blueprints.pulumi.services.ec2instance import pulumi_ec2_instance_func
 # from awsmgr.app.blueprints.pulumi.commands import base_awscmd
 
+
 from awsmgr.app.utils import get_aws_config, session_cred_dict, AWSConfigException
 from awsmgr.app.blueprints.boto.services import boto3_get_session, boto3_start_ec2, boto3_stop_ec2, boto3_renew_token, boto3_get_caller_id, BotoException
+from awsmgr.app.blueprints.boto.services.dataclass import AWSConfig
 
 # from awsmgr.config import Config
 
 DEFAULT_TAG_NAME = 'Demo Cyverse'
 
-DEFAULT_S3_BUCKET_NAME = 'my-awsmgr-s3-bucket'
+DEFAULT_S3_BUCKET_NAME = 'cy-awsmgr-bucket-2024'
 
 DEFAULT_RESOURCE_NAME = 'my-awsmgr-ec2-server'
 DEFAULT_INSTANCE_TYPE = 't2.micro'
@@ -47,13 +49,10 @@ def main():
 
 
 @main.command()
-@click.option('--aws-kms-key', default=None, help="AWS_KMS_KEY environment variable override")
-@click.option('--aws-access-key-id', default=None, help="AWS_ACCESS_KEY_ID environment variable override")
-@click.option('--aws-secret-access-key', default=None, help="AWS_SECRET_ACCESS_KEY environment variable override")
-@click.option('--aws-region', default=None, help="AWS_DEFAULT_REGION environment variable override")
-@click.option('--aws-profile', default=None, help="AWS_DEFAULT_PROFILE environment variable override")
+@click.option('-e', '--env', multiple=True, callback=process_env, help="Set/use an environment var by --env VAR_NAME='value' or --env VAR_NAME to use matching environment variable")
+@click.option('-m', '--skip-memcached', is_flag=True, show_default=True, default=False, help="Don't poll memcached for variable")
 @click.option('--bucket-name', default=DEFAULT_S3_BUCKET_NAME, help="AWS_DEFAULT_PROFILE environment variable override")
-def create_s3(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region, aws_profile, bucket_name):
+def create_s3(env: dict, skip_memcached: bool, bucket_name: str):
     f"""
     Provisioning '{bucket_name}' s3 bucket.
     """
@@ -62,11 +61,26 @@ def create_s3(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region,
     app = create_app()
     with app.app_context():
         click.echo("\t[3] Initialized app context")
+
+        ## @TODO This isn't being used?.. needs to override os environment I think
+        awsconfig = get_aws_config(
+            skip_memcached=skip_memcached,
+            printf=click.echo,
+            env=env,
+            **{
+                'aws_account_id': None,
+                'aws_access_key_id': None,
+                'aws_secret_access_key': None,
+                'aws_session_token': None,
+                'aws_default_region': None,
+                'aws_credential_expiration': None,
+                # 'aws_session_token_duration': 900,
+            }
+        )
         project_name = app.config['PULUMI_PROJECT_NAME']
         stack_name = app.config['PULUMI_STACK_NAME']
         pulumi_project_dir = app.config['PULUMI_PROJECT_DIR']
         pulumi_home_dir = app.config['PULUMI_HOME']
-        aws_region = app.config['AWS_REGION']
 
         pulumi_setup_stack_call(
             lambda: pulumi_s3_bucket_func(bucket_name),
@@ -74,19 +88,16 @@ def create_s3(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region,
             stack_name,
             pulumi_project_dir,
             pulumi_home_dir,
-            aws_region,
+            awsconfig['aws_default_region'],
             setup=True,
             printf=click.echo
         )
 
 @main.command()
-@click.option('--aws-kms-key', default=None, help="AWS_KMS_KEY environment variable override")
-@click.option('--aws-access-key-id', default=None, help="AWS_ACCESS_KEY_ID environment variable override")
-@click.option('--aws-secret-access-key', default=None, help="AWS_SECRET_ACCESS_KEY environment variable override")
-@click.option('--aws-region', default=None, help="AWS_DEFAULT_REGION environment variable override")
-@click.option('--aws-profile', default=None, help="AWS_DEFAULT_PROFILE environment variable override")
+@click.option('-e', '--env', multiple=True, callback=process_env, help="Set/use an environment var by --env VAR_NAME='value' or --env VAR_NAME to use matching environment variable")
+@click.option('-m', '--skip-memcached', is_flag=True, show_default=True, default=False, help="Don't poll memcached for variable")
 @click.option('--bucket-name', default=DEFAULT_S3_BUCKET_NAME, help="S3 Bucket name")
-def destroy_s3(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region, aws_profile, bucket_name):
+def destroy_s3(env: dict, skip_memcached: bool, bucket_name: str):
     f"""
     Deprovisioning '{bucket_name}' s3 bucket.
     """
@@ -95,11 +106,25 @@ def destroy_s3(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region
     app = create_app()
     with app.app_context():
         click.echo("\t[3] Initialized app context")
+        ## @TODO This isn't being used?.. needs to override os environment I think
+        awsconfig = get_aws_config(
+            skip_memcached=skip_memcached,
+            printf=click.echo,
+            env=env,
+            **{
+                'aws_account_id': None,
+                'aws_access_key_id': None,
+                'aws_secret_access_key': None,
+                'aws_session_token': None,
+                'aws_default_region': None,
+                'aws_credential_expiration': None,
+                # 'aws_session_token_duration': 900,
+            }
+        )
         project_name = app.config['PULUMI_PROJECT_NAME']
         stack_name = app.config['PULUMI_STACK_NAME']
         pulumi_project_dir = app.config['PULUMI_PROJECT_DIR']
         pulumi_home_dir = app.config['PULUMI_HOME']
-        aws_region = app.config['AWS_REGION']
 
         pulumi_setup_stack_call(
             lambda: pulumi_s3_bucket_func(bucket_name),
@@ -107,7 +132,7 @@ def destroy_s3(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region
             stack_name,
             pulumi_project_dir,
             pulumi_home_dir,
-            aws_region,
+            awsconfig['aws_default_region'],
             setup=False,
             printf=click.echo
         )
@@ -186,14 +211,10 @@ def destroy_ec2(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_regio
 
 
 @main.command()
-@click.option('--aws-kms-key', default=None, help="AWS_KMS_KEY environment variable override")
-@click.option('--aws-access-key-id', default=None, help="AWS_ACCESS_KEY_ID environment variable override")
-@click.option('--aws-secret-access-key', default=None, help="AWS_SECRET_ACCESS_KEY environment variable override")
-@click.option('--aws-region', default=None, help="AWS_DEFAULT_REGION environment variable override")
-@click.option('--aws-profile', default=None, help="AWS_DEFAULT_PROFILE environment variable override")
+@click.option('-e', '--env', multiple=True, callback=process_env, help="Set/use an environment var by --env VAR_NAME='value' or --env VAR_NAME to use matching environment variable")
 @click.option('--tag-name', default=DEFAULT_TAG_NAME, help="DEFAULT_TAG_NAME environment variable override")
 @click.option('--ec2-resource-name', default=DEFAULT_RESOURCE_NAME, help=f"EC2 resource name, ie {DEFAULT_RESOURCE_NAME}")
-def start_ec2(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region, aws_profile, tag_name, ec2_resource_name):
+def start_ec2(env: dict, tag_name: bool, ec2_resource_name: str):
     f"""
     Start an EC2 instance.
     """
@@ -206,14 +227,11 @@ def start_ec2(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region,
 
 
 @main.command()
-@click.option('--aws-kms-key', default=None, help="AWS_KMS_KEY environment variable override")
-@click.option('--aws-access-key-id', default=None, help="AWS_ACCESS_KEY_ID environment variable override")
-@click.option('--aws-secret-access-key', default=None, help="AWS_SECRET_ACCESS_KEY environment variable override")
-@click.option('--aws-region', default=None, help="AWS_DEFAULT_REGION environment variable override")
-@click.option('--aws-profile', default=None, help="AWS_DEFAULT_PROFILE environment variable override")
+@click.option('-e', '--env', multiple=True, callback=process_env, help="Set/use an environment var by --env VAR_NAME='value' or --env VAR_NAME to use matching environment variable")
+@click.option('-m', '--skip-memcached', is_flag=True, show_default=True, default=False, help="Don't poll memcached for variable")
 @click.option('--tag-name', default=DEFAULT_TAG_NAME, help="DEFAULT_TAG_NAME environment variable override")
 @click.option('--ec2-resource-name', default=DEFAULT_RESOURCE_NAME, help=f"EC2 resource name, ie {DEFAULT_RESOURCE_NAME}")
-def stop_ec2(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region, aws_profile, tag_name, ec2_resource_name):
+def stop_ec2(env: dict, skip_memcached: bool, tag_name: str, ec2_resource_name: str):
     f"""
     Stop an EC2 instance.
     """
@@ -221,8 +239,22 @@ def stop_ec2(aws_kms_key, aws_access_key_id, aws_secret_access_key, aws_region, 
     click.echo("\t[2] Initialize Flask application stack")
     app = create_app()
     with app.app_context():
-        aws_region = app.config['AWS_REGION']
-        boto3_stop_ec2(ec2_resource_name, printf=click.echo)
+        awsconfig = get_aws_config(
+            skip_memcached=skip_memcached,
+            printf=click.echo,
+            env=env,
+            **{
+                'aws_account_id': None,
+                'aws_access_key_id': None,
+                'aws_secret_access_key': None,
+                'aws_session_token': None,
+                'aws_default_region': None,
+                'aws_credential_expiration': None,
+                # 'aws_session_token_duration': 900,
+            }
+        )
+        # aws_region = app.config['AWS_REGION']
+        boto3_stop_ec2(ec2_resource_name, printf=click.echo, awsconfig=awsconfig)
 
 
 @main.command()
@@ -236,6 +268,8 @@ def renew_token(env: dict, fakeit: bool, skip_memcached: bool, aws_session_token
     """
     click.echo("\t[1] Initialize Flask application stack")
 
+    awsc = AWSConfig()
+
     app = create_app()
     with app.app_context():
         ## Get current config state
@@ -245,20 +279,26 @@ def renew_token(env: dict, fakeit: bool, skip_memcached: bool, aws_session_token
             printf=click.echo,
             env=env,
             **{
+                'aws_account_id': None,
                 'aws_access_key_id': None,
                 'aws_secret_access_key': None,
                 'aws_session_token': None,
+                'aws_credential_expiration': None,
                 'aws_session_token_duration': aws_session_token_duration,
             }
         )
 
+        session = boto3_get_session(awsconfig=awsconfig)
+        # account_id, user_id, role_id = boto3_get_caller_id(printf=click.echo, session=session)
+        # click.echo(f"account_id: {account_id} user_id: {user_id} role_id: {role_id}")
+
         # click.echo(pprint.pformat(session_cred_dict(**awsconfig)))
         #
         # session = boto3.Session(**credentials)
-        session = boto3_get_session(
-            printf=click.echo,
-            awsconfig=session_cred_dict(printf=click.echo, **awsconfig)
-        )
+        # session = boto3_get_session(
+        #     printf=click.echo,
+        #     awsconfig=session_cred_dict(printf=click.echo, **awsconfig)
+        # )
 
         # click.echo(f"\t[2b] Got credentials")
         # if not fakeit:
