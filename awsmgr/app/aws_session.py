@@ -3,6 +3,8 @@ from uuid import uuid4
 from datetime import datetime
 from time import time
 
+from typing import Callable
+
 from pymemcache.client.base import Client
 
 import pytz
@@ -40,7 +42,8 @@ class RefreshableBotoSession:
         profile_name: str = None,
         sts_arn: str = None,
         session_name: str = None,
-        session_ttl: int = TTL
+        session_ttl: int = TTL,
+        printf: Callable[[list, dict], None] = print
     ):
         """
         Initialize `RefreshableBotoSession`
@@ -72,7 +75,8 @@ class RefreshableBotoSession:
             An integer number to set the TTL for each session. Beyond this session, it will renew the token.
             50 minutes by default which is before the default role expiration of 1 hour
         """
-        print(f"RefreshableBotoSession::__init__(account_id={account_id}, access_key_id={access_key_id})")
+        self.print = printf
+        self.print(f"RefreshableBotoSession::__init__(account_id={account_id}, access_key_id={access_key_id})")
         self.account_id = account_id
         self.access_key_id = access_key_id.decode("utf-8") if type(access_key_id) is bytes else access_key_id
         self.secret_access_key = secret_access_key.decode("utf-8") if type(secret_access_key) is bytes else secret_access_key
@@ -87,7 +91,7 @@ class RefreshableBotoSession:
         """
         Get session credentials
         """
-        print(f"self.access_key_id: {self.access_key_id}")
+        self.print(f"self.access_key_id: {self.access_key_id}")
         session = Session(
             self.access_key_id,
             self.secret_access_key,
@@ -109,7 +113,7 @@ class RefreshableBotoSession:
 
         # if sts_arn is given, get credential by assuming the given role
         if self.sts_arn:
-            print('OPTION A: sts_client = session.client(service_name="sts", region_name=self.region_name)')
+            self.print('OPTION A: sts_client = session.client(service_name="sts", region_name=self.region_name)')
             sts_client = session.client(service_name="sts", region_name=self.region_name)
             response = sts_client.assume_role(
                 RoleArn=self.sts_arn,
@@ -119,7 +123,7 @@ class RefreshableBotoSession:
 
             ## Store new credentials
             access_key = response.get("AccessKeyId")
-            print(f"**NEW** access_key: {access_key}, expires={self.session_ttl}")
+            self.print(f"**NEW** access_key: {access_key}, expires={self.session_ttl}")
             secret_key = response.get("SecretAccessKey")
             token = response.get("SessionToken")
             expiry_time = response.get("Expiration").isoformat()
@@ -144,7 +148,7 @@ class RefreshableBotoSession:
                 "expiry_time": expiry_time,
             }
         else:
-            print("OPTION B: session_credentials = session.get_credentials().get_frozen_credentials()")
+            self.print("OPTION B: session_credentials = session.get_credentials().get_frozen_credentials()")
             session_credentials = session.get_credentials().get_frozen_credentials()
             credentials = {
                 "access_key": session_credentials.access_key,
@@ -160,7 +164,7 @@ class RefreshableBotoSession:
         Get refreshable boto3 session.
         """
         # Get refreshable credentials
-        print("refreshable_session()")
+        self.print("refreshable_session()")
         refreshable_credentials = RefreshableCredentials.create_from_metadata(
             metadata=self.__get_session_credentials(),
             refresh_using=self.__get_session_credentials,

@@ -44,6 +44,14 @@ all during compile time will reduce issues when pip installing from source.
     $ poetry install
 ```
 
+#### Run project inside poetry
+
+```
+   $> cd <project>
+   $> poetry shell
+   $> poetry run awsmgr <commands/flags/etc...>
+```
+
 #### Compile project
 
 This creates a whl file and places it into the ./dist folder.

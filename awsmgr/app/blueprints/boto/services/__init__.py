@@ -2,15 +2,22 @@ import boto3
 import pprint
 import sys
 import re
+from typing import Callable
+import pprint
 
 from botocore.credentials import RefreshableCredentials
 from botocore.exceptions import NoCredentialsError, ClientError
+from botocore.client import BaseClient
 from boto3.session import Session
 
-from awsmgr.app.utils import session_cred_dict
+# from awsmgr.app.utils import session_cred_dict
 from awsmgr.app.aws_session import RefreshableBotoSession
+from awsmgr.app.blueprints.boto.services.dataclass import AWSMgrConfigDataClass
 
 from flask import current_app
+
+
+pp = pprint.PrettyPrinter(indent=4)
 
 
 class BotoException(Exception):
@@ -20,8 +27,8 @@ class BotoException(Exception):
         self.code = code
 
 
-def find_instance_id_by_name(resource_name):
-    ec2 = boto3.client('ec2')
+def find_instance_id_by_name(ec2: BaseClient, resource_name: str):
+    # ec2 = boto3.client('ec2')
     response = ec2.describe_instances(
         Filters=[
             {
@@ -30,19 +37,21 @@ def find_instance_id_by_name(resource_name):
             }
         ]
     )
+    pp.pprint(response)
     for reservation in response['Reservations']:
-        for instance in reservation['Instance']:
+        for instance in reservation['Instances']:
             return instance['InstanceId']
     return None
 
 
-def boto3_start_ec2(ec2_resource_name, printf=print):
+def boto3_start_ec2(acdc: AWSMgrConfigDataClass, ec2_resource_name: str, printf: Callable[[list, dict], None] = print):
     printf(f"boto3_start_ec2({ec2_resource_name})")
-    ec2 = boto3.resource('ec2')
-
-    instance_id = find_instance_id_by_name(ec2_resource_name)
+    session = boto3_get_session(acdc, printf=printf)
+    ec2_resource = session.resource('ec2')
+    ec2_client = session.client('ec2')
+    instance_id = find_instance_id_by_name(ec2_client, ec2_resource_name)
     if instance_id:
-        instance = ec2.Instance(instance_id)
+        instance = ec2_resource.Instance(instance_id)
         printf("Starting instance: {instance_id}")
         response = instance.start()
         printf(response)
@@ -50,12 +59,14 @@ def boto3_start_ec2(ec2_resource_name, printf=print):
         printf(f"ERROR: Could not find {ec2_resource_name}")
 
 
-def boto3_stop_ec2(ec2_resource_name, printf=print):
+def boto3_stop_ec2(acdc: AWSMgrConfigDataClass, ec2_resource_name: str, printf: Callable[[list, dict], None] = print):
     printf(f"boto3_stop_ec2({ec2_resource_name})")
-    ec2 = boto3.resource('ec2')
-    instance_id = find_instance_id_by_name(ec2_resource_name)
+    session = boto3_get_session(acdc, printf=printf)
+    ec2_resource = session.resource('ec2')
+    ec2_client = session.client('ec2')
+    instance_id = find_instance_id_by_name(ec2_client, ec2_resource_name)
     if instance_id:
-        instance = ec2.Instance(instance_id)
+        instance = ec2_resource.Instance(instance_id)
         printf("Stopping instance: {instance_id}")
         response = instance.stop()
         printf(response)
@@ -89,51 +100,53 @@ def boto3_stop_ec2(ec2_resource_name, printf=print):
 #     }
 
 
-def boto3_get_session(printf=print, awsconfig: dict = {}):
-    printf("boto3_get_session()")
+def boto3_get_session(acdc: AWSMgrConfigDataClass, printf=print):
+    printf(f"boto3_get_session() {acdc.aws_access_key_id}")
 
-    if awsconfig:
-        if ('aws_account_id' in awsconfig):
-            aws_account_id = awsconfig['aws_account_id']
-        else:
-            raise BotoException("ERROR: Missing 'aws_account_id'", status=1, code='ConfigError')
-        if ('aws_access_key_id' in awsconfig):
-            aws_access_key_id = awsconfig['aws_access_key_id']
-        else:
-            raise BotoException("ERROR: Missing 'aws_access_key_id'", status=1, code='ConfigError')
+    # if awsconfig:
+    #     if ('aws_account_id' in awsconfig):
+    #         aws_account_id = awsconfig['aws_account_id']
+    #     else:
+    #         raise BotoException("ERROR: Missing 'aws_account_id'", status=1, code='ConfigError')
+    #     if ('aws_access_key_id' in awsconfig):
+    #         aws_access_key_id = awsconfig['aws_access_key_id']
+    #     else:
+    #         raise BotoException("ERROR: Missing 'aws_access_key_id'", status=1, code='ConfigError')
 
-        if ('aws_secret_access_key' in awsconfig):
-            aws_secret_access_key = awsconfig['aws_secret_access_key']
-        else:
-            raise BotoException("ERROR: Missing 'aws_secret_access_key'", status=1, code='ConfigError')
+    #     if ('aws_secret_access_key' in awsconfig):
+    #         aws_secret_access_key = awsconfig['aws_secret_access_key']
+    #     else:
+    #         raise BotoException("ERROR: Missing 'aws_secret_access_key'", status=1, code='ConfigError')
 
-        if ('aws_session_token' in awsconfig):
-            aws_session_token = awsconfig['aws_session_token']
-        else:
-            aws_session_token = None
+    #     if ('aws_session_token' in awsconfig):
+    #         aws_session_token = awsconfig['aws_session_token']
+    #     else:
+    #         aws_session_token = None
 
-        if ('aws_session_token_duration' in awsconfig):
-            aws_session_token_duration = awsconfig['aws_session_token_duration']
-            printf(f"aws_session_token_duration: {aws_session_token_duration}")
-        else:
-            aws_session_token_duration = None
-        printf(f"Called with passed credentials... aws_account_id: {aws_account_id}")
-        ## stupid chicken/egg issue with aws_account_id
-        try:
-            return RefreshableBotoSession(
-                account_id=aws_account_id,
-                access_key_id=aws_access_key_id,
-                secret_access_key=aws_secret_access_key,
-                session_token=aws_session_token,
-                sts_arn=f'arn:aws:sts::{aws_account_id}:role/AWSMgrRole'
-            ).refreshable_session()
-        except ClientError as e:
-            printf(f"ERROR: {e} ")
-            sys.exit(1)
-    else:
-        printf("called without credentials")
-        ## stupid chicken/egg issue with aws_account_id
-        return RefreshableBotoSession(sts_arn=f'arn:aws:sts::{aws_account_id}:role/AWSMgrRole').refreshable_session()
+    #     if ('aws_session_token_duration' in awsconfig):
+    #         aws_session_token_duration = awsconfig['aws_session_token_duration']
+    #         printf(f"aws_session_token_duration: {aws_session_token_duration}")
+    #     else:
+    #         aws_session_token_duration = None
+    #     printf(f"Called with passed credentials... aws_account_id: {aws_account_id}")
+    ## stupid chicken/egg issue with aws_account_id
+    try:
+        printf("calling RefreshableBotoSession")
+        return RefreshableBotoSession(
+            account_id=acdc.aws_account_id,
+            access_key_id=acdc.aws_access_key_id,
+            secret_access_key=acdc.aws_secret_access_key,
+            session_token=acdc.aws_session_token,
+            sts_arn=f'arn:aws:sts::{acdc.aws_account_id}:role/AWSMgrRole',
+            printf=printf
+        ).refreshable_session()
+    except ClientError as e:
+        printf(f"ERROR: {e} ")
+        sys.exit(1)
+    # else:
+    #     printf("called without credentials")
+    #     ## stupid chicken/egg issue with aws_account_id
+    #     return RefreshableBotoSession(sts_arn=f'arn:aws:sts::{aws_account_id}:role/AWSMgrRole').refreshable_session()
 
     # if(awsconfig):
     #     session = boto3.Session(**session_cred_dict(**awsconfig))
@@ -189,7 +202,7 @@ def boto3_get_caller_id(printf=print, session: Session = None, awsconfig: dict =
         sys.exit(1)
     else:
         account_id = res['Account'] if 'Account' in res else None
-        printf(pprint.pformat(res))
+        # printf(pprint.pformat(res))
         user_id, role_id = None, None
         if('UserId' in res):
             match = re.match(r'^([^:]+)', res['UserId'])

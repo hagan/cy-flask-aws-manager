@@ -9,6 +9,8 @@ from flask.cli import with_appcontext
 from pulumi_aws import Provider
 from pulumi.automation import LocalWorkspace, Stack, ProjectSettings, ProjectBackend, ConfigValue
 
+from awsmgr.app.blueprints.boto.services.dataclass import AWSMgrConfigDataClass
+
 ## with_appcontext sets functions 'app' argument to current_app from flask
 # Note, anything that references this will need to be from flask or use:
 # with app.app_context():
@@ -29,7 +31,7 @@ def create_dir(
     if dir_path is None:
         raise Exception("ERROR: 'dir_path' was set to None")
     dir_exists = Path(dir_path).is_dir()
-    
+
     if not dir_exists:
         try:
             # printf(f"Creating pulumi {dir_path} directory...")
@@ -40,27 +42,28 @@ def create_dir(
             return
 
 
-def get_pulumi_provider(awsconfig: dict = {}):
+def get_pulumi_provider(acdc: AWSMgrConfigDataClass):
     """
     Setup AWS Provider
     """
     print("get_pulumi_provider()")
-    Provider(
+    return Provider(
         "aws-provider",
-        access_key=awsconfig[],
-        secret_key=awsconfig[],
-        region=awsconfig[]
+        access_key=acdc.aws_access_key_id,
+        secret_key=acdc.aws_secret_access_key,
+        token=acdc.aws_session_token,
+        region=acdc.aws_default_region
     )
 
 
 
 def pulumi_setup_stack_call(
+    acdc: AWSMgrConfigDataClass,
     program: SetupStackFunction,
     project_name: str,
     stack_name: str,
     pulumi_project_dir: str,
     pulumi_home_dir: str,
-    aws_region: str,
     setup: bool = True,
     printf=print
 ):
@@ -87,7 +90,7 @@ def pulumi_setup_stack_call(
     stack.workspace.install_plugin("aws", "v4.0.0")
     # stack.set_config("aws:region", value="us-west-2", secret=False)
     printf("and here D")
-    stack.set_config("aws:region", ConfigValue(value=aws_region, secret=False))
+    stack.set_config("aws:region", ConfigValue(value=acdc.aws_default_region, secret=False))
     printf("and here E")
     if setup:
         up_result = stack.up(on_output=printf)
