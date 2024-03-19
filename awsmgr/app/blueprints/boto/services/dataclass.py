@@ -25,8 +25,11 @@ MEMCACHED_EXPIRE_DEFAULTS = {
 pp = pprint.PrettyPrinter(indent=4)
 debug_print = lambda *args, **kwargs: print(*args, **kwargs) if DEBUG_THIS is True else None
 
+
 class AWSMgrConfigDataClassException(Exception):
-    pass
+    def __init__(self, message, status=0):
+        super().__init__(message)
+        self.status = status
 
 
 def rewrite_sensitive_key(key, value):
@@ -125,9 +128,7 @@ class AWSMgrConfigDataClass:
                 not_empty_fields.append(field.name)
         if empty_fields:
             debug_print(f"Not empty fields: {', '.join(not_empty_fields)}")
-            raise AWSMgrConfigDataClassException(f"AWSMgrConfigDataClass has empty field(s) {', '.join(empty_fields)} is/are empty")
-
-
+            raise AWSMgrConfigDataClassException(f"AWSMgrConfigDataClass has empty field(s) {', '.join(empty_fields)} is/are empty", status=1)
 
         self.update_environment()
 

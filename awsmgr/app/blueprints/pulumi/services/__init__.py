@@ -2,6 +2,7 @@ import os
 import asyncio
 from pathlib import Path
 from typing import Callable
+import pprint
 
 from flask import current_app
 from flask.cli import with_appcontext
@@ -80,10 +81,11 @@ def pulumi_setup_stack_call(
     stacks = workspace.list_stacks()
     stack_names = [stack.name for stack in stacks]
     if stack_name in stack_names:
-        printf("BEFORE ISSUE A")
+        printf(f"BEFORE ISSUE A : '{stack_name}'")
         stack = Stack.select(stack_name=stack_name, workspace=workspace)
     else:
-        printf("BEFORE ISSUE B")
+        printf(f"BEFORE ISSUE B : '{stack_name}'")
+
         stack = Stack.create(stack_name=stack_name, workspace=workspace)
 
     printf("and here C")
